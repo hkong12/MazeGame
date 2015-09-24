@@ -1,16 +1,29 @@
 #include "connection.h"
-
+#include "gameserver.h"
 #include <QtNetwork>
 
 static const int TransferTimeout = 30 * 1000;
 static const char SeparatorToken = ' ';
 
-Connection::Connection(QObject *parent)
+Connection::Connection(Identity identity, QObject *parent )
     : QTcpSocket(parent)
 {
-    currentDataType = Undefined;
+    m_currentDataType = Undefined;
     m_transferTimerId = 0;
     m_numBytesForCurrentDataType = -1;
+    m_identity = identity;
+
+    QObject::connect(this, SIGNAL(readyRead()), this, SLOT(processReadyRead()));
+    QObject::connect(this, SIGNAL(connected()), this, SLOT(sendGreetingMessage()));
+}
+
+void Connection::sendGreetingMessage()
+{
+    QString greetingMessage = "Join the game!";
+    QByteArray greeting = greetingMessage.toUtf8();
+    QByteArray data = "GREETING " + QByteArray::number(greeting.size()) + ' ' + greeting;
+    if(write(data) != data.size())
+        abort();
 }
 
 bool Connection::sendMessage(DataType dataType, const QString &message)
@@ -31,7 +44,6 @@ bool Connection::sendMessage(DataType dataType, const QString &message)
         break;
     case PlainText:
         header = "PLAINTEXT ";
-        break;
     default:
         header = "UNDEFINED ";
         break;
@@ -49,6 +61,42 @@ void Connection::timerEvent(QTimerEvent *timerEvent)
         killTimer(m_transferTimerId);
         m_transferTimerId = 0;
     }
+}
+
+void Connection::processReadyRead()
+{
+    if(m_identity == Server) {
+
+        if(!isValid()) {
+            abort();
+            return;
+        }
+
+        do {
+            if(m_currentDataType == Undefined) {
+                if(!readProtocolHeader())
+                    return;
+            }
+            if(!hasEnoughData())
+                return;
+            processDataServer();
+        } while(bytesAvailable() > 0);
+
+    }
+
+    if(m_identity == Client) {
+
+        do {
+            if(m_currentDataType == Undefined) {
+                if(!readProtocolHeader())
+                    return;
+            }
+            if(!hasEnoughData())
+                return;
+            processDataClient();
+        } while(bytesAvailable() > 0);
+    }
+
 }
 
 int Connection::readDataIntoBuffer(int maxSize)
@@ -95,15 +143,15 @@ bool Connection::readProtocolHeader()
     }
 
     if(m_buffer == "GREETING") {
-        currentDataType = Greeting;
+        m_currentDataType = Greeting;
     } else if(m_buffer == "DIRECTION") {
-        currentDataType = Direction;
+        m_currentDataType = Direction;
     } else if(m_buffer == "GAMESTATE") {
-        currentDataType = GameState;
+        m_currentDataType = GameState;
     } else if(m_buffer == "PLAINTEXT") {
-        currentDataType = PlainText;
+        m_currentDataType = PlainText;
     } else {
-        currentDataType = Undefined;
+        m_currentDataType = Undefined;
         abort();
         return false;
     }
@@ -132,7 +180,7 @@ bool Connection::hasEnoughData()
     return true;
 }
 
-void Connection::processData()
+void Connection::processDataServer()
 {
     m_buffer = read(m_numBytesForCurrentDataType);
     if(m_buffer.size() != m_numBytesForCurrentDataType) {
@@ -140,18 +188,42 @@ void Connection::processData()
         return;
     }
 
-    switch(currentDataType) {
+    switch(m_currentDataType) {
     case Greeting:
+        emit newClient();
         break;
     case Direction:
-        break;
-    case GameState:
+        // emit newMove();
         break;
     default:
         break;
     }
 
-    currentDataType = Undefined;
+    m_currentDataType = Undefined;
+    m_numBytesForCurrentDataType = 0;
+    m_buffer.clear();
+}
+
+void Connection::processDataClient()
+{
+    m_buffer = read(m_numBytesForCurrentDataType);
+    if(m_buffer.size() != m_numBytesForCurrentDataType) {
+        abort();
+        return;
+    }
+
+    switch(m_currentDataType) {
+    case PlainText:
+        // Display
+        break;
+    case GameState:
+        emit newState(QString::fromUtf8(m_buffer));
+        break;
+    default:
+        break;
+    }
+
+    m_currentDataType = Undefined;
     m_numBytesForCurrentDataType = 0;
     m_buffer.clear();
 }

@@ -12,8 +12,6 @@ TARGET = GameClient
 TEMPLATE = app
 
 HEADERS = client.h \
-    gamestate.h
 
 SOURCES += client.cpp \
             main.cpp \
-    gamestate.cpp

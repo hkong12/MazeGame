@@ -6,14 +6,11 @@
 
 static const int MaxBufferSize = 1024000;
 
-class Connection : QTcpSocket
+class Connection : public QTcpSocket
 {
     Q_OBJECT
 
 public:
-    enum ConnectionState {
-
-    };
     enum DataType {
         Greeting,
         Direction,
@@ -21,27 +18,41 @@ public:
         PlainText,
         Undefined
     };
+    enum Identity {
+        Server,
+        Client
+    };
 
-    Connection(QObject *parent = 0);
-    void sendGreetingMessage();
+    Connection(Identity identity, QObject *parent = 0);
+    void setGreetingMessage();
     bool sendMessage(DataType dataType, const QString &message);
+
+signals:
+    void newGame();
+    void newClient();
+    void newMove(QString &playerID, const QString &move);
+    void newState(const QString &state);
+
+    void doneTcpSocket();
 
 protected:
     void timerEvent(QTimerEvent *timerEvent);
 
 private slots:
     void processReadyRead();
+    void sendGreetingMessage();
 
 private:
     int readDataIntoBuffer(int maxSize = MaxBufferSize);
     int dataLengthForCurrentDataType();
     bool readProtocolHeader();
     bool hasEnoughData();
-    void processData();
+    void processDataServer();
+    void processDataClient();
 
-    static QString sm_playerID;
-    QString m_greetingMessage;
-    DataType currentDataType;
+    QString sm_playerID;
+    Identity m_identity;
+    DataType m_currentDataType;
     QByteArray m_buffer;
     int m_transferTimerId;
     int m_numBytesForCurrentDataType;

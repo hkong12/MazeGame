@@ -112,25 +112,18 @@ void Client::requestNewText()
 
     tcpSocket->connectToHost(hostCombo->currentText(),
                              portLineEdit->text().toInt());
+
+    QString msg("Hello, I am khc.");
+    QByteArray data = "GREETING " + QByteArray::number(msg.toUtf8().size()) + ' ' + msg.toUtf8();
+    tcpSocket->write(data);
 }
 
 void Client::readText()
 {
-    QDataStream in(tcpSocket);
-    in.setVersion(QDataStream::Qt_4_0);
-
-    if(blockSize == 0) {
-        if(tcpSocket->bytesAvailable() < (int)sizeof(quint16))
-            return;
-
-        in >> blockSize;
-    }
-
-    if(tcpSocket->bytesAvailable() < blockSize)
-        return;
-
-    QString nextText;
-    in >> nextText;
+    QByteArray buffer;
+    buffer.clear();
+    buffer.append(tcpSocket->read(10));
+    QString nextText = QString::fromUtf8(buffer);
 
     if(nextText == currentText) {
         QTimer::singleShot(0, this, SLOT(requestNewText()));

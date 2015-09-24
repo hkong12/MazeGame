@@ -3,21 +3,31 @@
 
 #include <QThread>
 #include <QTcpSocket>
+#include "gameserver.h"
+#include "connection.h"
 
-class GameServerThread : public QThread
+class GameServerThread : QObject
 {
     Q_OBJECT
 
 public:
-    GameServerThread(int socketDescriptor, const QString &text, QObject *parent);
-    void run() Q_DECL_OVERRIDE;
+    GameServerThread(GameServer* server, int socketDiscriptor, QObject *parent);
+    ~GameServerThread();
 
 signals:
-    void error(QTcpSocket::SocketError socketError);
+    void error(QTcpSocket::SocketError);
+
+private slots:
+    void handleNewClient();
+    void handleNewMove(QString &playerID, const QString &move);
+    void handleDoneTcpSocket();
+    void handleGameStart();
 
 private:
-    int m_socketDescriptor;
-    QString m_text;
+    int m_socketDiscriptor;
+    QThread m_thread;
+    GameServer* m_serverPtr;
+    Connection* m_connection;
 };
 
 #endif // GAMESERVERTHREAD_H

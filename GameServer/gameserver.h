@@ -6,6 +6,7 @@
 #include <QTcpServer>
 #include <QMutex>
 #include <QTimer>
+#include <QList>
 
 class GameServer : public QTcpServer
 {
@@ -15,16 +16,31 @@ public:
     enum Status {OFF, WAIT, ON};
     GameServer(QObject *parent = 0);
 
+    QString newClient();
+    bool newMove(QString &playerID, const QString &move);
+
+signals:
+    void gameStart();
+
 protected:
     void incomingConnection(qintptr socketDescriptor) Q_DECL_OVERRIDE;
 
-private:
-    QStringList m_game;
+private slots:
+    void handleWaitingTimeout();
 
+private:
+    void getRandString(QString &str);
+
+    QString m_game;
     Status m_serverStatus;
-    QTimer m_timer;
+    QTimer *m_timer;
     QMutex m_gameStateMutex;
-//    GameState m_gameState;
+    QMutex m_serverStatusMutex;
+    QList<QString> m_playerList;
+
+
+
+//    GameState* m_gameState;
 };
 
 #endif // GAMESERVER_H
