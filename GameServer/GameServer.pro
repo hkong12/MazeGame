@@ -14,10 +14,12 @@ TEMPLATE = app
 HEADERS       = dialog.h \
                 gameserver.h \
                 gameserverthread.h \
-                connection.h
+                connection.h \
+                gamestate.h
 
 SOURCES       = dialog.cpp \
                 gameserver.cpp \
                 gameserverthread.cpp \
                 main.cpp \
-                connection.cpp
+                connection.cpp \
+                gamestate.cpp

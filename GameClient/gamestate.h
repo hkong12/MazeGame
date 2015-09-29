@@ -1,42 +1,49 @@
 #ifndef GAMESTATE_H
 #define GAMESTATE_H
 
-#include <map>
+#include <QObject>
+#include <QList>
+#include <QJsonObject>
 
-typedef pair<int, int> Location;
-typedef unsigned int PlayerID;
+typedef std::pair<int, int> Location;
+typedef QString PlayerID;
 
-class GameState
+class GameState : public QObject
 {
+    Q_OBJECT
+
 public:
     GameState();
-    ~GameState();
+    GameState(int n, int m, QList<QString> *playerList, QObject *parent = 0);
+    bool responseToPlayerMove(PlayerID, QString);
 
-    int getMapWidth();
-    int getMapLength();
-    int getPlayerNumber();
+    void write(QJsonObject &json) const;
+    void initRead(const QJsonObject &json);
+    void updateRead(const QJsonObject &json);
+    void read(const QJsonObject &json);
 
-    initTreasureMap();
-    lookupTreasureMap();
-    updateTreasureMap();
+    int getSize() { return m_Size; }
+    int getPlayerNumber() { return m_playerNumber; }
+    std::map<PlayerID, Location>* getPlayerMap() { return &m_playerMap; }
+    std::map<Location, int>* getTreasureMap() { return &m_TreasureMap; }
 
-    initPlayerMap();
-    lookupPlayerMap();
-    updatePlayerMap();
+signals:
+    void gameStateError(QString str);
+    void gameStateUpdated();
+    void gameFinished();
 
-    initPlayerTreasureCount();
-    lookupPlayerTreasureCount();
-    updatePlayerTreasureCount();
-
-    getGameStateToJson();   // Get current game state in JSON format
+public slots:
 
 private:
-    static int sm_mapWidth;
-    static int sm_mapLength;
-    static int sm_playerNumber;
-    map<Location, int> m_TreasureMap;           // Record current treasure location and corresponding amount
-    map<PlayerID, Location> m_playerMap;        // Record current player location
-    map<PlayerID, int> m_playerTreasureCounter; // Record current treasure amount of each player
+    int m_Size;
+    int m_TreasureCount;
+    int m_playerNumber;
+    bool m_isFinish;
+    std::map<Location, int> m_TreasureMap;         // Record current treasure location and corresponding amount
+    std::map<PlayerID, Location> m_playerMap;      // Record current player location
+    std::map<PlayerID, int> m_playerTreasureCount; // Record current treasure amount of each player
+
+    Location randomLocation();
 };
 
 #endif // GAMESTATE_H

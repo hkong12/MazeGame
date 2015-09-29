@@ -1,7 +1,11 @@
-#include "gameclient.h"
+#include <QtNetwork>
 
-GameClient::GameClient(QWidget *parent) : QMainWindow(parent)
+#include "gameclient.h"
+#include "gamestate.h"
+
+GameClient::GameClient()
 {
 
 }
+
 

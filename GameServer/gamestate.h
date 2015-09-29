@@ -32,6 +32,7 @@ private:
     std::map<Location, int> m_TreasureMap;           // Record current treasure location and corresponding amount
     std::map<PlayerID, Location> m_playerMap;        // Record current player location
     std::map<PlayerID, int> m_playerTreasureCount; // Record current treasure amount of each player
+
     void GameInit();
     Location randomLocation();
     void readMapLocationInt(const QJsonObject &json);

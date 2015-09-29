@@ -1,11 +1,62 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
+#include <QString>
+#include <QTcpSocket>
 
-class Connection
+static const int MaxBufferSize = 1024000;
+
+class Connection : public QTcpSocket
 {
+    Q_OBJECT
+
 public:
-    Connection();
+    enum DataType {
+        Greeting,
+        Direction,
+        GameState,
+        PlainText,
+        Undefined
+    };
+    enum Identity {
+        Server,
+        Client
+    };
+
+    Connection(Identity identity, QObject *parent = 0);
+    void setGreetingMessage();
+    bool sendMessage(DataType dataType, const QString &message);
+
+signals:
+    void newGame();
+    void newClient();
+    void newMove(QString &playerID, const QString &move);
+    void newState(const QString &state);
+
+    void doneTcpSocket();
+
+protected:
+    void timerEvent(QTimerEvent *timerEvent);
+
+private slots:
+    void processReadyRead();
+    void sendGreetingMessage();
+
+private:
+    int readDataIntoBuffer(int maxSize = MaxBufferSize);
+    int dataLengthForCurrentDataType();
+    bool readProtocolHeader();
+    bool hasEnoughData();
+    void processDataServer();
+    void processDataClient();
+
+    QString sm_playerID;
+    Identity m_identity;
+    DataType m_currentDataType;
+    QByteArray m_buffer;
+    int m_transferTimerId;
+    int m_numBytesForCurrentDataType;
+
 };
 
 #endif // CONNECTION_H

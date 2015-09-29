@@ -24,8 +24,8 @@ void GameServer::incomingConnection(qintptr socketDescriptor)
 
 void GameServer::getRandString(QString &randString)
 {
-    int max = 8;
-    QString tmp = QString("0123456789ABCDEFGHIJKLMNOPQRSTUVWZYZ");
+    int max = 6;
+    QString tmp = QString("0123456789ABCDEF");
     QString str = QString();
     QTime t;
     t= QTime::currentTime();
@@ -42,6 +42,8 @@ void GameServer::handleWaitingTimeout()
     m_serverStatusMutex.lock();
     // TODO: initialize the game state;
     m_game = "Game start.";
+    emit gameStart();
+
     m_serverStatus = ON;
     m_serverStatusMutex.unlock();
 

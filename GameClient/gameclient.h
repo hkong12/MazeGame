@@ -1,17 +1,17 @@
 #ifndef GAMECLIENT_H
 #define GAMECLIENT_H
 
-#include <QMainWindow>
+class GameState;
 
-class GameClient : public QMainWindow
+class GameClient
 {
-    Q_OBJECT
+
 public:
-    explicit GameClient(QWidget *parent = 0);
+    GameClient();
 
-signals:
+private:
 
-public slots:
+    GameState *m_gameState;
 };
 
 #endif // GAMECLIENT_H

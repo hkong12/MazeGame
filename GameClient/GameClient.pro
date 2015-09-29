@@ -12,6 +12,14 @@ TARGET = GameClient
 TEMPLATE = app
 
 HEADERS = client.h \
+          chessboard.h \
+          gamestate.h \
+    gameclient.h \
+    gameui.h
 
 SOURCES += client.cpp \
-            main.cpp \
+           main.cpp \
+           chessboard.cpp \
+           gamestate.cpp \
+    gameclient.cpp \
+    gameui.cpp
