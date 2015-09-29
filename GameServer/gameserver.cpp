@@ -1,4 +1,5 @@
 #include "gameserver.h"
+#include "gamestate.h"
 #include "gameserverthread.h"
 #include "connection.h"
 
@@ -11,7 +12,9 @@ GameServer::GameServer(QObject *parent)
 {
     m_serverStatus = OFF;
     m_playerList.clear();
-    m_timer = NULL;
+    m_timer = new QTimer(this);
+    m_timer->setSingleShot(true);
+    m_gameState = NULL;
 
     connect(m_timer, SIGNAL(timeout()), this, SLOT(handleWaitingTimeout()));
 }
@@ -27,9 +30,6 @@ void GameServer::getRandString(QString &randString)
     int max = 6;
     QString tmp = QString("0123456789ABCDEF");
     QString str = QString();
-    QTime t;
-    t= QTime::currentTime();
-    qsrand(t.msec()+t.second()*1000);
     for(int i=0;i<max;i++) {
         int ir = qrand()%tmp.length();
         str[i] = tmp.at(ir);
@@ -41,10 +41,9 @@ void GameServer::handleWaitingTimeout()
 {
     m_serverStatusMutex.lock();
     // TODO: initialize the game state;
-    m_game = "Game start.";
-    emit gameStart();
-
+    m_gameState = new GameState(10, 10, &m_playerList);
     m_serverStatus = ON;
+    emit gameStart();
     m_serverStatusMutex.unlock();
 
 }
@@ -60,7 +59,6 @@ QString GameServer::newClient()
         getRandString(playerID);
         m_playerList.append(playerID);
         m_serverStatus = WAIT;
-        m_timer = new QTimer(this);
         m_timer->start(WaitingTimeout);
 
     } else if(m_serverStatus == WAIT) { // join the current game

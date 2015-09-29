@@ -14,12 +14,14 @@ TEMPLATE = app
 HEADERS = client.h \
           chessboard.h \
           gamestate.h \
-    gameclient.h \
-    gameui.h
+          gameclient.h \
+          gameui.h \
+          connection.h
 
 SOURCES += client.cpp \
            main.cpp \
            chessboard.cpp \
            gamestate.cpp \
-    gameclient.cpp \
-    gameui.cpp
+           gameclient.cpp \
+           gameui.cpp \
+           connection.cpp

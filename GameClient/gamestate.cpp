@@ -1,4 +1,4 @@
-#include <QJsonArray>
+#include <QJsonDocument>
 #include "gamestate.h"
 
 GameState::GameState()
@@ -165,20 +165,20 @@ void GameState::updateRead(const QJsonObject &json)
 
     QJsonObject treasureMap = json["TreasureMap"].toObject();
     foreach(item, treasureMap.keys()) {
-        QString tmp = item;
-        tmp.mid(1).chop(1);
-        a = tmp.section(',', 1, 1);
-        b = tmp.section(',', 2, 2);
+        QString tmp = item.mid(1);
+        tmp.chop(1);
+        a = tmp.section(',', 0, 0);
+        b = tmp.section(',', 1, 1);
         Location l = std::make_pair(a.toInt(), b.toInt());
         m_TreasureMap[l] = treasureMap[item].toInt();
     }
 
     QJsonObject playerMap = json["playerMap"].toObject();
     foreach(item, playerMap.keys()) {
-        QString tmp = playerMap[item].toString();
-        tmp.mid(1).chop(1);
-        a = tmp.section(',', 1, 1);
-        b = tmp.section(',', 2, 2);
+        QString tmp = playerMap[item].toString().mid(1);
+        tmp.chop(1);
+        a = tmp.section(',', 0, 0);
+        b = tmp.section(',', 1, 1);
         Location l = std::make_pair(a.toInt(), b.toInt());
         m_playerMap[item] = l;
     }
@@ -221,4 +221,22 @@ void GameState::write(QJsonObject &json) const
 
 }
 
+void GameState::writeByteArray(QByteArray &barray) const
+{
+    QJsonObject json;
+    write(json);
+    QJsonDocument saveDoc(json);
+    barray = saveDoc.toBinaryData();
+}
 
+void GameState::readInitByteArray(const QByteArray &barray)
+{
+    QJsonDocument loadDoc(QJsonDocument::fromBinaryData(barray));
+    initRead(loadDoc.object());
+}
+
+void GameState::readUpdateByteArray(const QByteArray &barray)
+{
+    QJsonDocument loadDoc(QJsonDocument::fromBinaryData(barray));
+    updateRead(loadDoc.object());
+}

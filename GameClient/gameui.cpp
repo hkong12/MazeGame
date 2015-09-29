@@ -83,7 +83,6 @@ GameUI::GameUI(QWidget *parent) : QWidget(parent)
 
     setWindowTitle(tr("Maze Game"));
     m_portLineEdit->setFocus();
-
 }
 
 void GameUI::requestStart()

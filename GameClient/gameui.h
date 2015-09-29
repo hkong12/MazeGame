@@ -11,7 +11,7 @@ class GameUI : public QWidget
 
 public:
     GameUI(QWidget *parent = 0);
-    ChessBoard* getChessBoard() { return m_chessBoard; }
+    ChessBoard *m_chessBoard;
 
 public slots:
     void requestStart();
@@ -32,8 +32,6 @@ private:
 
     QLabel *m_logLabel;
     QTextEdit *m_logTextEdit;
-
-    ChessBoard *m_chessBoard;
 };
 
 #endif // GAMEUI_H

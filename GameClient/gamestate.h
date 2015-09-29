@@ -17,10 +17,9 @@ public:
     GameState(int n, int m, QList<QString> *playerList, QObject *parent = 0);
     bool responseToPlayerMove(PlayerID, QString);
 
-    void write(QJsonObject &json) const;
-    void initRead(const QJsonObject &json);
-    void updateRead(const QJsonObject &json);
-    void read(const QJsonObject &json);
+    void writeByteArray(QByteArray &barray) const;
+    void readInitByteArray(const QByteArray &barray);
+    void readUpdateByteArray(const QByteArray &barray);
 
     int getSize() { return m_Size; }
     int getPlayerNumber() { return m_playerNumber; }
@@ -44,6 +43,9 @@ private:
     std::map<PlayerID, int> m_playerTreasureCount; // Record current treasure amount of each player
 
     Location randomLocation();
+    void write(QJsonObject &json) const;
+    void initRead(const QJsonObject &json);
+    void updateRead(const QJsonObject &json);
 };
 
 #endif // GAMESTATE_H

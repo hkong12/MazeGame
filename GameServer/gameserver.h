@@ -1,12 +1,13 @@
 #ifndef GAMESERVER_H
 #define GAMESERVER_H
 
-//#include "gamestate.h"
 #include <QStringList>
 #include <QTcpServer>
 #include <QMutex>
 #include <QTimer>
 #include <QList>
+
+class GameState;
 
 class GameServer : public QTcpServer
 {
@@ -18,6 +19,7 @@ public:
 
     QString newClient();
     bool newMove(QString &playerID, const QString &move);
+    GameState* getGameState() { return m_gameState; }
 
 signals:
     void gameStart();
@@ -31,16 +33,12 @@ private slots:
 private:
     void getRandString(QString &str);
 
-    QString m_game;
     Status m_serverStatus;
     QTimer *m_timer;
     QMutex m_gameStateMutex;
     QMutex m_serverStatusMutex;
     QList<QString> m_playerList;
-
-
-
-//    GameState* m_gameState;
+    GameState* m_gameState;
 };
 
 #endif // GAMESERVER_H

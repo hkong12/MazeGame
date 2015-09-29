@@ -1,9 +1,7 @@
 #include <QApplication>
+#include <iostream>
 #include "gameui.h"
-#include "client.h"
-#include "gameclient.h"
-#include "gamestate.h"
-#include "chessboard.h"
+#include "connection.h"
 
 void getRandString(QString &randString)
 {
@@ -23,6 +21,10 @@ int main(int argc, char *argv[])
 
     qsrand(QTime::currentTime().msec());
 
+    Connection client(Connection::Client);
+    client.connectToHost("192.168.0.133", 30000);
+
+/*
     QList<QString> playerList;
     playerList.clear();
     QString str;
@@ -33,14 +35,10 @@ int main(int argc, char *argv[])
     }
 
     GameState *gameState = new GameState(10, 10, &playerList);
- //   gameState->read();
-
-    ChessBoard chessBoard;
-    chessBoard.show();
-    chessBoard.setGameState(gameState);
-    chessBoard.setPlayerID(playerList.at(0));
-
+*/
 //    GameUI game;
+//    game.m_chessBoard->setGameState(gameState);
+//    game.m_chessBoard->setPlayerID(playerList.at(0));
 //    game.show();
 
     return app.exec();

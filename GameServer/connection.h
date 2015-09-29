@@ -25,7 +25,7 @@ public:
 
     Connection(Identity identity, QObject *parent = 0);
     void setGreetingMessage();
-    bool sendMessage(DataType dataType, const QString &message);
+    bool sendMessage(DataType dataType, const QByteArray &message);
 
 signals:
     void newGame();
