@@ -2,41 +2,46 @@
 #define GAMESTATE_H
 
 #include <map>
+#include <QList>
+#include <QJsonObject>
 
-typedef pair<int, int> Location;
-typedef unsigned int PlayerID;
+typedef std::pair<int, int> Location;
+typedef QString PlayerID;
 
 class GameState
 {
 public:
     GameState();
+    GameState(int n, int m, QList<QString> *playerList);
     ~GameState();
+    void responseToPlayerAction(PlayerID, QString);
+    // read and write JSON method
+    // read is used for P2P
+    // write is used for both P2P and CS version
+    void read(const QJsonObject &json);
+    void write(const QJsonObject &json);
 
-    int getMapWidth() { return sm_mapWidth; }
-    int getMapLength() { return sm_mapLength; }
-    int getPlayerNumber() { return sm_playerNumber; }
-
-    initTreasureMap();
-    lookupTreasureMap();
-    updateTreasureMap();
-
-    initPlayerMap();
-    lookupPlayerMap();
-    updatePlayerMap();
-
-    initPlayerTreasureCount();
-    lookupPlayerTreasureCount();
-    updatePlayerTreasureCount();
-
-    getGameStateToJson();   // Get current game state in JSON format
+    int getSize() { return m_Size; }
+    int getPlayerNumber() { return m_playerNumber; }
 
 private:
-    static int sm_mapWidth;
-    static int sm_mapLength;
-    static int sm_playerNumber;
-    map<Location, int> m_TreasureMap;           // Record current treasure location and corresponding amount
-    map<PlayerID, Location> m_playerMap;        // Record current player location
-    map<PlayerID, int> m_playerTreasureCounter; // Record current treasure amount of each player
+    int m_Size;
+    int m_TreasureCount;
+    int m_playerNumber;
+    QList<QString> * m_playerList;
+    std::map<Location, int> m_TreasureMap;           // Record current treasure location and corresponding amount
+    std::map<PlayerID, Location> m_playerMap;        // Record current player location
+    std::map<PlayerID, int> m_playerTreasureCount; // Record current treasure amount of each player
+    void GameInit();
+    Location randomLocation();
+    void readMapLocationInt(const QJsonObject &json);
+    void readMapPlayerIDInt(const QJsonObject &json);
+    void readMapPlayerIDLocation(const QJsonObject &json);
+    void writeMapLocationInt(const QJsonObject &json);
+    void writeMapPlayerIDInt(const QJsonObject &json);
+    void writeMapPlayerIDLocation(const QJsonObject &json);
+    QString pairToString(Location);
+    Location stringToPair(QString);
 };
 
 #endif // GAMESTATE_H
