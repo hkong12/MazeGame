@@ -1,4 +1,5 @@
 #include "gameserver.h"
+#include "gamestate.h"
 #include "gameserverthread.h"
 #include "connection.h"
 
@@ -11,25 +12,36 @@ GameServer::GameServer(QObject *parent)
 {
     m_serverStatus = OFF;
     m_playerList.clear();
-    m_timer = NULL;
+    m_playerConnectionMap.clear();
+    m_playerThreadMap.clear();
+    m_timer = new QTimer(this);
+    m_timer->setSingleShot(true);
+    m_gameState = NULL;
 
     connect(m_timer, SIGNAL(timeout()), this, SLOT(handleWaitingTimeout()));
 }
 
+GameServer::~GameServer()
+{
+
+}
+
 void GameServer::incomingConnection(qintptr socketDescriptor)
 {
-    GameServerThread* thread = new GameServerThread(this, socketDescriptor, this);
-
+//    GameServerThread* thread = new GameServerThread(this, socketDescriptor, this);
+    Connection* newcon = new Connection(Connection::Server);
+    if(!newcon->setSocketDescriptor(socketDescriptor)) {
+        emit socketError(newcon->error());
+    } else {
+        connect(newcon, SIGNAL(newClient(Connection*)), this, SLOT(handleNewClient(Connection*)));
+    }
 }
 
 void GameServer::getRandString(QString &randString)
 {
-    int max = 8;
-    QString tmp = QString("0123456789ABCDEFGHIJKLMNOPQRSTUVWZYZ");
+    int max = 6;
+    QString tmp = QString("0123456789ABCDEF");
     QString str = QString();
-    QTime t;
-    t= QTime::currentTime();
-    qsrand(t.msec()+t.second()*1000);
     for(int i=0;i<max;i++) {
         int ir = qrand()%tmp.length();
         str[i] = tmp.at(ir);
@@ -41,15 +53,30 @@ void GameServer::handleWaitingTimeout()
 {
     m_serverStatusMutex.lock();
     // TODO: initialize the game state;
-    m_game = "Game start.";
-    emit gameStart();
-
+    m_gameState = new GameState(10, 10, &m_playerList);
     m_serverStatus = ON;
+    emit gameStart();
     m_serverStatusMutex.unlock();
-
 }
 
-QString GameServer::newClient()
+void GameServer::handleNewClient(Connection *conn)
+{
+    QString playerID = addClient();
+    QString message;
+
+    if(playerID.length() == 0) {
+        message = "<Rejected> Current game is under way. Please try later...";
+        conn->sendMessage(Connection::Greeting, message.toUtf8());
+    } else {
+        m_playerConnectionMap[conn] = playerID;
+        m_playerThreadMap[playerID] = new GameServerThread(this, conn);
+        m_playerThreadMap[playerID]->start();
+        message = '<'+ playerID + '>' + " You have joined the new game. Please wait for other players...";
+        conn->sendMessage(Connection::Greeting, message.toUtf8());
+    }
+}
+
+QString GameServer::addClient()
 {
     QString playerID = "";
 
@@ -60,7 +87,6 @@ QString GameServer::newClient()
         getRandString(playerID);
         m_playerList.append(playerID);
         m_serverStatus = WAIT;
-        m_timer = new QTimer(this);
         m_timer->start(WaitingTimeout);
 
     } else if(m_serverStatus == WAIT) { // join the current game
@@ -83,8 +109,23 @@ QString GameServer::newClient()
     return playerID;
 }
 
-bool GameServer::newMove(QString &playerID, const QString &move)
+bool GameServer::respondToMove(QString pid, QString move)
 {
+    bool ok;
+    m_gameStateMutex.lock();
+    ok = m_gameState->responseToPlayerMove(pid, move);
+    m_gameStateMutex.unlock();
+    if(m_gameState->getIsFinish()) {
+        m_serverStatusMutex.lock();
+        m_serverStatus = OFF;
+        m_serverStatusMutex.unlock();
+    }
+    return ok;
+}
 
-
+void GameServer::getCurrentGameState(QByteArray &barray)
+{
+    m_gameStateMutex.lock();
+    m_gameState->writeByteArray(barray);
+    m_gameStateMutex.unlock();
 }

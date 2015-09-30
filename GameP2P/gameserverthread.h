@@ -2,32 +2,22 @@
 #define GAMESERVERTHREAD_H
 
 #include <QThread>
-#include <QTcpSocket>
 #include "gameserver.h"
-#include "connection.h"
 
-class GameServerThread : QObject
+class GameServerThread : public QThread
 {
     Q_OBJECT
 
 public:
-    GameServerThread(GameServer* server, int socketDiscriptor, QObject *parent);
-    ~GameServerThread();
+    GameServerThread(GameServer* server, Connection* conn, QThread *parent = 0);
 
-signals:
-    void error(QTcpSocket::SocketError);
-
-private slots:
-    void handleNewClient();
-    void handleNewMove(QString &playerID, const QString &move);
-    void handleDoneTcpSocket();
+public slots:
+    void handleNewMove(QByteArray bytes);
     void handleGameStart();
 
 private:
-    int m_socketDiscriptor;
-    QThread m_thread;
-    GameServer* m_serverPtr;
-    Connection* m_connection;
+    GameServer* m_server;
+    Connection* m_conn;
 };
 
 #endif // GAMESERVERTHREAD_H

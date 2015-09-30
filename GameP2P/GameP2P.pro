@@ -4,7 +4,8 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui \
+            network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -12,17 +13,21 @@ TARGET = GameP2P
 TEMPLATE = app
 
 
-SOURCES += main.cpp\
-        mainwindow.cpp \
-    peermanager.cpp \
-    client.cpp \
-    server.cpp \
-    connection.cpp
+SOURCES += main.cpp \
+           connection.cpp \
+           gameui.cpp \
+           gameclient.cpp \
+           gameserver.cpp \
+           gameserverthread.cpp \
+           chessboard.cpp \
+           gamestate.cpp
 
-HEADERS  += mainwindow.h \
-    peermanager.h \
-    client.h \
-    server.h \
-    connection.h
 
-FORMS    += mainwindow.ui
+HEADERS  += connection.h \
+            gameui.h \
+            gameclient.h \
+            gameserver.h \
+            gameserverthread.h \
+            chessboard.h \
+            gamestate.h
+

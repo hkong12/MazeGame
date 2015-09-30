@@ -25,15 +25,15 @@ public:
 
     Connection(Identity identity, QObject *parent = 0);
     void setGreetingMessage();
-    bool sendMessage(DataType dataType, const QString &message);
+    bool sendMessage(DataType dataType, const QByteArray &message);
 
 signals:
-    void newGame();
-    void newClient();
-    void newMove(QString &playerID, const QString &move);
-    void newState(const QString &state);
+    void newGreeting(QByteArray greeting);
+    void newClient(Connection* conn);
+    void newMove(QByteArray move);
+    void newState(QByteArray state);
 
-    void doneTcpSocket();
+    void delTcpSocket();
 
 protected:
     void timerEvent(QTimerEvent *timerEvent);
@@ -41,6 +41,7 @@ protected:
 private slots:
     void processReadyRead();
     void sendGreetingMessage();
+    void doneTcpSocket();
 
 private:
     int readDataIntoBuffer(int maxSize = MaxBufferSize);
@@ -50,7 +51,6 @@ private:
     void processDataServer();
     void processDataClient();
 
-    QString sm_playerID;
     Identity m_identity;
     DataType m_currentDataType;
     QByteArray m_buffer;

@@ -115,6 +115,11 @@ bool GameServer::respondToMove(QString pid, QString move)
     m_gameStateMutex.lock();
     ok = m_gameState->responseToPlayerMove(pid, move);
     m_gameStateMutex.unlock();
+    if(m_gameState->getIsFinish()) {
+        m_serverStatusMutex.lock();
+        m_serverStatus = OFF;
+        m_serverStatusMutex.unlock();
+    }
     return ok;
 }
 

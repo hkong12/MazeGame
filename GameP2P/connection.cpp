@@ -1,5 +1,4 @@
 #include "connection.h"
-#include "gameserver.h"
 #include <QtNetwork>
 
 static const int TransferTimeout = 30 * 1000;
@@ -26,31 +25,31 @@ void Connection::sendGreetingMessage()
         abort();
 }
 
-bool Connection::sendMessage(DataType dataType, const QString &message)
+bool Connection::sendMessage(DataType dataType, const QByteArray &message)
 {
     if(message.isEmpty())
         return false;
 
     QString header;
     switch(dataType) {
-    case Greeting:
-        header = "GTREETING ";
+    case Connection::Greeting:
+        header = "GREETING ";
         break;
-    case Direction:
+    case Connection::Direction:
         header = "DIRECTION ";
         break;
-    case GameState:
+    case Connection::GameState:
         header = "GAMESTATE ";
         break;
-    case PlainText:
+    case Connection::PlainText:
         header = "PLAINTEXT ";
+        break;
     default:
         header = "UNDEFINED ";
         break;
     }
 
-    QByteArray msg = message.toUtf8();
-    QByteArray data = header.toUtf8() + QByteArray::number(msg.size()) + ' ' + msg;
+    QByteArray data = header.toUtf8() + QByteArray::number(message.size()) + ' ' + message;
     return write(data) == data.size();
 }
 
@@ -61,6 +60,10 @@ void Connection::timerEvent(QTimerEvent *timerEvent)
         killTimer(m_transferTimerId);
         m_transferTimerId = 0;
     }
+}
+
+void Connection::doneTcpSocket()
+{
 }
 
 void Connection::processReadyRead()
@@ -142,13 +145,13 @@ bool Connection::readProtocolHeader()
         return false;
     }
 
-    if(m_buffer == "GREETING") {
+    if(m_buffer == "GREETING ") {
         m_currentDataType = Greeting;
-    } else if(m_buffer == "DIRECTION") {
+    } else if(m_buffer == "DIRECTION ") {
         m_currentDataType = Direction;
-    } else if(m_buffer == "GAMESTATE") {
+    } else if(m_buffer == "GAMESTATE ") {
         m_currentDataType = GameState;
-    } else if(m_buffer == "PLAINTEXT") {
+    } else if(m_buffer == "PLAINTEXT ") {
         m_currentDataType = PlainText;
     } else {
         m_currentDataType = Undefined;
@@ -190,10 +193,10 @@ void Connection::processDataServer()
 
     switch(m_currentDataType) {
     case Greeting:
-        emit newClient();
+        emit newClient(this);
         break;
     case Direction:
-        // emit newMove();
+        emit newMove(m_buffer);
         break;
     default:
         break;
@@ -213,11 +216,14 @@ void Connection::processDataClient()
     }
 
     switch(m_currentDataType) {
+    case Greeting:
+        emit newGreeting(m_buffer);
+        break;
     case PlainText:
         // Display
         break;
     case GameState:
-        emit newState(QString::fromUtf8(m_buffer));
+        emit newState(m_buffer);
         break;
     default:
         break;
