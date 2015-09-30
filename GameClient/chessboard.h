@@ -17,6 +17,7 @@ public:
     void setPlayerID(QString pid);
 
 signals:
+    void tryMove(QString move);
 
 public slots:
     void updateChessBoard() { this->update(); }

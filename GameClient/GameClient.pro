@@ -11,15 +11,13 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = GameClient
 TEMPLATE = app
 
-HEADERS = client.h \
-          chessboard.h \
+HEADERS = chessboard.h \
           gamestate.h \
           gameclient.h \
           gameui.h \
           connection.h
 
-SOURCES += client.cpp \
-           main.cpp \
+SOURCES += main.cpp \
            chessboard.cpp \
            gamestate.cpp \
            gameclient.cpp \

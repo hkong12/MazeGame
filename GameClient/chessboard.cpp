@@ -26,7 +26,7 @@ void ChessBoard::setPlayerID(QString pid)
 
 void ChessBoard::paintEvent(QPaintEvent *)
 {
-    if(m_gameState == NULL) {
+    if(m_gameState == NULL || m_gameState->getSize() == -1) {
         m_paint->begin(this);
         m_paint->setPen(QPen(Qt::black,4,Qt::SolidLine));
         m_paint->drawRect(BorderSize, BorderSize, BoardSize, BoardSize);
@@ -83,19 +83,19 @@ void ChessBoard::keyPressEvent(QKeyEvent *event)
     switch(event->key()) {
     case Qt::Key_W:
     case Qt::Key_Up:
-        m_gameState->responseToPlayerMove(m_playerID, QString("W"));
+        emit tryMove(QString("W"));
         break;
     case Qt::Key_A:
     case Qt::Key_Left:
-         m_gameState->responseToPlayerMove(m_playerID, QString("A"));
+        emit tryMove(QString("A"));
         break;
     case Qt::Key_S:
     case Qt::Key_Down:
-         m_gameState->responseToPlayerMove(m_playerID, QString("S"));
+        emit tryMove(QString("S"));
         break;
     case Qt::Key_D:
     case Qt::Key_Right:
-         m_gameState->responseToPlayerMove(m_playerID, QString("D"));
+        emit tryMove(QString("D"));
         break;
     default:
         break;

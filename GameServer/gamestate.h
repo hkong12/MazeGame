@@ -25,6 +25,8 @@ public:
     int getPlayerNumber() { return m_playerNumber; }
     std::map<PlayerID, Location>* getPlayerMap() { return &m_playerMap; }
     std::map<Location, int>* getTreasureMap() { return &m_TreasureMap; }
+    int getPlayerTreasureNum(QString playerID) { return m_playerTreasureCount[playerID]; }
+    bool getIsFinish() { return m_isFinish; }
 
 signals:
     void gameStateError(QString str);

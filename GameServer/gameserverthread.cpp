@@ -1,62 +1,29 @@
 #include "gameserverthread.h"
+#include "connection.h"
 #include "gamestate.h"
 
 #include <QtNetwork>
 
-GameServerThread::GameServerThread(GameServer* server, int socketDiscriptor, QObject *parent)
-    :QObject(parent), m_socketDiscriptor(socketDiscriptor), m_serverPtr(server)
+GameServerThread::GameServerThread(GameServer *server, Connection *conn, QThread *parent)
+    : QThread(parent), m_server(server), m_conn(conn)
 {
-    m_connection = new Connection(Connection::Server);
-    if(!m_connection->setSocketDescriptor(m_socketDiscriptor)) {
-        emit error(m_connection->error());
-        return;
-    }
-
-    m_connection->moveToThread(&m_thread);
-    connect(&m_thread, SIGNAL(finished()), m_connection, SLOT(deleteLater()));
-    connect(m_serverPtr, SIGNAL(gameStart()), this, SLOT(handleGameStart()));
-    connect(m_connection, SIGNAL(doneTcpSocket()), this, SLOT(handleDoneTcpSocket()));
-    connect(m_connection, SIGNAL(newClient()), this, SLOT(handleNewClient()));
-    connect(m_connection, SIGNAL(newMove(QString&,const QString&)), this, SLOT(handleNewMove(QString&,const QString&)));
-    m_thread.start();
+    connect(m_server, SIGNAL(gameStart()), this, SLOT(handleGameStart()));
+    connect(m_conn, SIGNAL(newMove(QByteArray)), this, SLOT(handleNewMove(QByteArray)));
 }
 
-GameServerThread::~GameServerThread() {
-    m_thread.quit();
-    m_thread.wait();
-}
-
-void GameServerThread::handleNewClient() {
-    QString playerID = m_serverPtr->newClient();
-    QString message;
-
-    if(playerID.length() == 0) {
-        message = "<Rejected> Current game is under way. Please try later...";
-        m_connection->sendMessage(Connection::PlainText, message.toUtf8());
-    } else {
-        message = '<'+ playerID + '>' + " You have joined the new game. Please wait for other players...";
-        m_connection->sendMessage(Connection::PlainText, message.toUtf8());
-    }
-}
-
-void GameServerThread::handleNewMove(QString &playerID, const QString &move) {
-    bool result = m_serverPtr->newMove(playerID, move);
-    if(result == true) {
-        // TODO
-    } else {
-        QString message = "Your current move is forbidden";
-        m_connection->sendMessage(Connection::PlainText, message.toUtf8());
-    }
-}
-
-void GameServerThread::handleGameStart() {
-    // TODO: get current game status
+void GameServerThread::handleGameStart()
+{
     QByteArray message;
-    m_serverPtr->getGameState()->writeByteArray(message);
-    m_connection->sendMessage(Connection::GameState, message);
+    m_server->getCurrentGameState(message);
+    m_conn->sendMessage(Connection::GameState, message);
 }
 
-void GameServerThread::handleDoneTcpSocket() {
-   m_thread.quit();
-   m_thread.wait();
+void GameServerThread::handleNewMove(QByteArray bytes)
+{
+    QString pid(bytes.mid(0,6));
+    QString move(bytes.mid(7,1));
+    QByteArray message;
+    m_server->respondToMove(pid, move);
+    m_server->getCurrentGameState(message);
+    m_conn->sendMessage(Connection::GameState, message);
 }

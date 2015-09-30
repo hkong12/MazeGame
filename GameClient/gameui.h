@@ -4,18 +4,26 @@
 #include <QtWidgets>
 
 class ChessBoard;
+class GameClient;
+class GameState;
 
 class GameUI : public QWidget
 {
     Q_OBJECT
 
 public:
-    GameUI(QWidget *parent = 0);
-    ChessBoard *m_chessBoard;
+    GameUI(QWidget *parent = 0); 
+    void setClient(GameClient* client);
 
 public slots:
     void requestStart();
     void enableStartButton();
+    void handleNewLog(QString log);
+    void handleNewClientInfo(QString info);
+    void handleNewPrimaryServerInfo(QString info);
+    void handleNewBackupServerInfo(QString info);
+    void handleInitGameState(GameState* gs);
+    void handleGameOver();
 
 private:
     QLabel *m_hostLabel;
@@ -32,6 +40,9 @@ private:
 
     QLabel *m_logLabel;
     QTextEdit *m_logTextEdit;
+
+    GameClient *m_client;
+    ChessBoard *m_chessBoard;
 };
 
 #endif // GAMEUI_H

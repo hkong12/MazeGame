@@ -12,6 +12,8 @@ GameServer::GameServer(QObject *parent)
 {
     m_serverStatus = OFF;
     m_playerList.clear();
+    m_playerConnectionMap.clear();
+    m_playerThreadMap.clear();
     m_timer = new QTimer(this);
     m_timer->setSingleShot(true);
     m_gameState = NULL;
@@ -19,10 +21,20 @@ GameServer::GameServer(QObject *parent)
     connect(m_timer, SIGNAL(timeout()), this, SLOT(handleWaitingTimeout()));
 }
 
+GameServer::~GameServer()
+{
+
+}
+
 void GameServer::incomingConnection(qintptr socketDescriptor)
 {
-    GameServerThread* thread = new GameServerThread(this, socketDescriptor, this);
-
+//    GameServerThread* thread = new GameServerThread(this, socketDescriptor, this);
+    Connection* newcon = new Connection(Connection::Server);
+    if(!newcon->setSocketDescriptor(socketDescriptor)) {
+        emit socketError(newcon->error());
+    } else {
+        connect(newcon, SIGNAL(newClient(Connection*)), this, SLOT(handleNewClient(Connection*)));
+    }
 }
 
 void GameServer::getRandString(QString &randString)
@@ -45,10 +57,26 @@ void GameServer::handleWaitingTimeout()
     m_serverStatus = ON;
     emit gameStart();
     m_serverStatusMutex.unlock();
-
 }
 
-QString GameServer::newClient()
+void GameServer::handleNewClient(Connection *conn)
+{
+    QString playerID = addClient();
+    QString message;
+
+    if(playerID.length() == 0) {
+        message = "<Rejected> Current game is under way. Please try later...";
+        conn->sendMessage(Connection::Greeting, message.toUtf8());
+    } else {
+        m_playerConnectionMap[conn] = playerID;
+        m_playerThreadMap[playerID] = new GameServerThread(this, conn);
+        m_playerThreadMap[playerID]->start();
+        message = '<'+ playerID + '>' + " You have joined the new game. Please wait for other players...";
+        conn->sendMessage(Connection::Greeting, message.toUtf8());
+    }
+}
+
+QString GameServer::addClient()
 {
     QString playerID = "";
 
@@ -81,8 +109,18 @@ QString GameServer::newClient()
     return playerID;
 }
 
-bool GameServer::newMove(QString &playerID, const QString &move)
+bool GameServer::respondToMove(QString pid, QString move)
 {
+    bool ok;
+    m_gameStateMutex.lock();
+    ok = m_gameState->responseToPlayerMove(pid, move);
+    m_gameStateMutex.unlock();
+    return ok;
+}
 
-
+void GameServer::getCurrentGameState(QByteArray &barray)
+{
+    m_gameStateMutex.lock();
+    m_gameState->writeByteArray(barray);
+    m_gameStateMutex.unlock();
 }

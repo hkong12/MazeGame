@@ -187,6 +187,8 @@ void GameState::updateRead(const QJsonObject &json)
     foreach(item, playerTreasureCount.keys()) {
         m_playerTreasureCount[item] = playerTreasureCount[item].toInt();
     }
+
+    emit gameStateUpdated();
 }
 
 void GameState::write(QJsonObject &json) const
