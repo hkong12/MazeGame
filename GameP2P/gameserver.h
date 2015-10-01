@@ -12,6 +12,7 @@
 class GameState;
 class Connection;
 class GameServerThread;
+class PeerManager;
 
 class GameServer : public QTcpServer
 {
@@ -19,12 +20,14 @@ class GameServer : public QTcpServer
 
 public:
     enum Status {OFF, WAIT, ON};
-    GameServer(QObject *parent = 0);
+    enum ServerType {PrimaryServer, BackupServer};
+    GameServer(ServerType st, QObject *parent = 0);
     ~GameServer();
 
-    bool newMove(QString &playerID, const QString &move);
     bool respondToMove(QString pid, QString move);
     void getCurrentGameState(QByteArray &barray);
+    void setBackupServerTimeFlag(bool b) { m_backupServerTimerFlag = b; }
+    QTimer* getBackupServerTimer() { return m_backupServerTimer; }
 
 signals:
     void socketError(QTcpSocket::SocketError);
@@ -35,8 +38,11 @@ protected:
 
 private slots:
     void handleWaitingTimeout();
+    void initBackupServer();
     void handleNewClient(Connection* conn);
-//    void handleNewMove();
+    void handleNewState(Connection*, QByteArray state);
+    void handleNewMove(Connection*, QByteArray move);
+    void handleNewAck();
 
 private:
     void getRandString(QString &str);
@@ -50,6 +56,13 @@ private:
     QMutex m_gameStateMutex;
     QList<QString> m_playerList;
     GameState* m_gameState;
+
+    ServerType m_servertType;
+    QString m_backupServerIp;
+    int m_backupServerPort;
+    QTimer* m_backupServerTimer;
+    bool m_backupServerTimerFlag;
+    Connection* m_connToBackup;
 };
 
 #endif // GAMESERVER_H

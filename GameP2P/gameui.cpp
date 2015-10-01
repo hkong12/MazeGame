@@ -121,7 +121,7 @@ void GameUI::enableStartButton()
 
 void GameUI::handleNewLog(QString log)
 {
-    m_logTextEdit->insertPlainText(log);
+    m_logTextEdit->insertPlainText('\n'+log);
 }
 
 void GameUI::handleNewClientInfo(QString info)

@@ -21,7 +21,6 @@ SOURCES += main.cpp \
            gameserverthread.cpp \
            chessboard.cpp \
            gamestate.cpp \
-    peermanager.cpp
 
 
 HEADERS  += connection.h \
@@ -31,5 +30,5 @@ HEADERS  += connection.h \
             gameserverthread.h \
             chessboard.h \
             gamestate.h \
-    peermanager.h
+            peermanager.h
 

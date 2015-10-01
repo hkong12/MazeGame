@@ -13,6 +13,7 @@ public:
 
 public slots:
     void handleNewMove(QByteArray bytes);
+    void handleNewAck();
     void handleGameStart();
 
 private:

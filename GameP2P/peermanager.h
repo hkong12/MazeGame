@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QHostAddress>
+#include <QMutex>
 
 class GameServer;
 
@@ -12,8 +13,8 @@ class PeerManager : public QObject
 
 public:
     PeerManager() {}
-    PeerManager(QString psIp, int psPort);
 
+    void setHasBackupServer(bool has) { m_hasBackupServer = has; }
     void setPrimaryServerAddr(QString ip, int port) { m_primaryServerIp = ip; m_primaryServerPort = port; }
     void setBackupServerAddr(QString ip, int port) { m_backupServerIp = ip; m_backupServerPort = port; }
 
@@ -21,21 +22,14 @@ public:
     QString getBackupServerIp() { return m_backupServerIp; }
     int getPrimaryServerPort() { return m_primaryServerPort; }
     int getBackupServerPort() { return m_backupServerPort; }
-    bool getIsPrimaryServer() { return m_isPrimaryServer; }
-    bool getIsBackupServer() { return m_isBackupServer; }
-    void setIsPrimaryServer(bool b) { m_isPrimaryServer = b; }
-    void setIsBackupServer(bool b) { m_isBackupServer = b; }
+    bool getHasBackupServer() { return m_hasBackupServer; }
 
 private:
-    bool m_isPrimaryServer;
-    bool m_isBackupServer;
+    bool m_hasBackupServer;
     QString m_primaryServerIp;
     int m_primaryServerPort;
     QString m_backupServerIp;
     int m_backupServerPort;
-
-    GameServer* m_primaryServer;
-    GameServer* m_backupServer;
 };
 
 #endif // PEERMANAGER_H

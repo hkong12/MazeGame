@@ -15,10 +15,9 @@ class GameClient : public QObject
 public:
     enum Status {OFF, WAIT, ON};
 
-    GameClient();
+    GameClient(QString psIp, int psPort);
     ~GameClient();
     void connectToServer(QString host, int port);
-    void setPeerManager(PeerManager* pm);
     Status getClientStatus() { return m_status; }
     GameState *getGameState() { return m_gameState; }
 
@@ -33,6 +32,8 @@ signals:
 public slots:
     void handleNewGreeting(QByteArray greeting);
     void handleNewState(QByteArray state);
+    void handleNewBackupServer(QByteArray bserver);
+
     void handleTryMove(QString move);
     void handleGameOver();
 
@@ -43,6 +44,7 @@ private:
     Connection *m_connection;
 
     PeerManager* m_peerManager;
+    bool m_isServer;
 //    GameServer* m_primaryServer;
 //    GameServer* m_backupServer;
 };

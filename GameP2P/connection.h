@@ -16,10 +16,13 @@ public:
         Direction,
         GameState,
         PlainText,
+        BServer,
+        Acknowledge,
         Undefined
     };
     enum Identity {
-        Server,
+        PrimaryServer,
+        BackupServer,
         Client
     };
 
@@ -32,6 +35,10 @@ signals:
     void newClient(Connection* conn);
     void newMove(QByteArray move);
     void newState(QByteArray state);
+    void newMove(Connection* conn, QByteArray move);
+    void newState(Connection* conn, QByteArray state);
+    void newBackupServer(QByteArray bserver);
+    void newAck();
 
     void delTcpSocket();
 
@@ -48,7 +55,8 @@ private:
     int dataLengthForCurrentDataType();
     bool readProtocolHeader();
     bool hasEnoughData();
-    void processDataServer();
+    void processDataPrimaryServer();
+    void processDataBackupServer();
     void processDataClient();
 
     Identity m_identity;
