@@ -45,7 +45,7 @@ private:
     QMap<Connection*, QString> m_playerConnectionMap;
     QMap<QString, GameServerThread*> m_playerThreadMap;
     Status m_serverStatus;
-    QTimer *m_timer;  
+    QTimer *m_timer;
     QMutex m_serverStatusMutex;
     QMutex m_gameStateMutex;
     QList<QString> m_playerList;

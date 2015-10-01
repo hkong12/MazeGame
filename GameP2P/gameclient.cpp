@@ -3,6 +3,8 @@
 #include "gameclient.h"
 #include "gamestate.h"
 #include "connection.h"
+#include "peermanager.h"
+#include "gameserver.h"
 
 GameClient::GameClient()
 {
@@ -10,12 +12,18 @@ GameClient::GameClient()
     m_status = OFF;
     m_gameState = NULL;
     m_connection = NULL;
+    m_peerManager = NULL;
 }
 
 GameClient::~GameClient()
 {
     delete m_gameState;
     delete m_connection;
+}
+
+void GameClient::setPeerManager(PeerManager *pm)
+{
+    m_peerManager = pm;
 }
 
 void GameClient::connectToServer(QString host, int port)

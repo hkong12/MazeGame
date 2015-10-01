@@ -5,6 +5,8 @@
 
 class GameState;
 class Connection;
+class GameServer;
+class PeerManager;
 
 class GameClient : public QObject
 {
@@ -16,6 +18,7 @@ public:
     GameClient();
     ~GameClient();
     void connectToServer(QString host, int port);
+    void setPeerManager(PeerManager* pm);
     Status getClientStatus() { return m_status; }
     GameState *getGameState() { return m_gameState; }
 
@@ -38,6 +41,10 @@ private:
     QString m_myPlayerID;
     GameState *m_gameState;
     Connection *m_connection;
+
+    PeerManager* m_peerManager;
+//    GameServer* m_primaryServer;
+//    GameServer* m_backupServer;
 };
 
 #endif // GAMECLIENT_H
