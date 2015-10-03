@@ -1,3 +1,9 @@
+/**************************************************************************/
+/* Class GameState                                                        */
+/* This class stores current information about the maze game for each pla */
+/* -yer and provide public function for handling player's instruction.    */
+/**************************************************************************/
+
 #ifndef GAMESTATE_H
 #define GAMESTATE_H
 

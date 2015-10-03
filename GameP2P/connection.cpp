@@ -1,5 +1,6 @@
-#include "connection.h"
 #include <QtNetwork>
+
+#include "connection.h"
 
 static const int TransferTimeout = 30 * 1000;
 static const char SeparatorToken = ' ';
@@ -11,6 +12,7 @@ Connection::Connection(Identity identity, QObject *parent )
     m_transferTimerId = 0;
     m_numBytesForCurrentDataType = -1;
     m_identity = identity;
+    m_buffer.clear();
 
     QObject::connect(this, SIGNAL(readyRead()), this, SLOT(processReadyRead()));
     QObject::connect(this, SIGNAL(connected()), this, SLOT(sendGreetingMessage()));
@@ -19,7 +21,7 @@ Connection::Connection(Identity identity, QObject *parent )
 void Connection::sendGreetingMessage()
 {
     if(m_identity == Client) {
-        QString greetingMessage = "Join the game!";
+        QString greetingMessage = "We are connected";
         QByteArray greeting = greetingMessage.toUtf8();
         QByteArray data = "GREETING " + QByteArray::number(greeting.size()) + ' ' + greeting;
         if(write(data) != data.size())
@@ -27,10 +29,10 @@ void Connection::sendGreetingMessage()
     }
 }
 
-bool Connection::sendMessage(DataType dataType, const QByteArray &message)
+void Connection::sendMessage(DataType dataType, QByteArray message)
 {
     if(message.isEmpty())
-        return false;
+        return;
 
     QString header;
     switch(dataType) {
@@ -43,14 +45,14 @@ bool Connection::sendMessage(DataType dataType, const QByteArray &message)
     case Connection::GameState:
         header = "GAMESTATE ";
         break;
-    case Connection::PlainText:
-        header = "PLAINTEXT ";
-        break;
-    case Connection::BServer:
-        header = "BACKUPSERVER ";
+    case Connection::SelectServer:
+        header = "SELECTSERVER ";
         break;
     case Connection::Acknowledge:
         header = "ACKNOWLEDGE ";
+        break;
+    case Connection::PlayerAddr:
+        header = "PLAYERADDR ";
         break;
     default:
         header = "UNDEFINED ";
@@ -58,7 +60,13 @@ bool Connection::sendMessage(DataType dataType, const QByteArray &message)
     }
 
     QByteArray data = header.toUtf8() + QByteArray::number(message.size()) + ' ' + message;
-    return write(data) == data.size();
+    write(data);
+    return;
+}
+
+void Connection::upgradeIdentityToPrimary()
+{
+    m_identity = PrimaryServer;
 }
 
 void Connection::timerEvent(QTimerEvent *timerEvent)
@@ -70,63 +78,25 @@ void Connection::timerEvent(QTimerEvent *timerEvent)
     }
 }
 
-void Connection::doneTcpSocket()
-{
-}
-
 void Connection::processReadyRead()
 {
-    if(m_identity == PrimaryServer) {
+    if(!isValid()) {
+        abort();
+        return;
+    }
 
-        if(!isValid()) {
-            abort();
-            return;
+    do {
+        if(m_currentDataType == Undefined) {
+            if(!readProtocolHeader())
+                return;
         }
 
-        do {
-            if(m_currentDataType == Undefined) {
-                if(!readProtocolHeader())
-                    return;
-            }
-            if(!hasEnoughData())
-                return;
-            processDataPrimaryServer();
-        } while(bytesAvailable() > 0);
-
-    }
-
-    if(m_identity == BackupServer) {
-
-        if(!isValid()) {
-            abort();
+        if(!hasEnoughData())
             return;
-        }
 
-        do {
-            if(m_currentDataType == Undefined) {
-                if(!readProtocolHeader())
-                    return;
-            }
-            if(!hasEnoughData())
-                return;
-            processDataBackupServer();
-        } while(bytesAvailable() > 0);
+        processData();
 
-    }
-
-    if(m_identity == Client) {
-
-        do {
-            if(m_currentDataType == Undefined) {
-                if(!readProtocolHeader())
-                    return;
-            }
-            if(!hasEnoughData())
-                return;
-            processDataClient();
-        } while(bytesAvailable() > 0);
-    }
-
+    } while(bytesAvailable() > 0);
 }
 
 int Connection::readDataIntoBuffer(int maxSize)
@@ -178,12 +148,12 @@ bool Connection::readProtocolHeader()
         m_currentDataType = Direction;
     } else if(m_buffer == "GAMESTATE ") {
         m_currentDataType = GameState;
-    } else if(m_buffer == "PLAINTEXT ") {
-        m_currentDataType = PlainText;
-    } else if(m_buffer == "BACKUPSERVER ") {
-        m_currentDataType = BServer;
+    } else if(m_buffer == "SELECTSERVER ") {
+        m_currentDataType = SelectServer;
     } else if(m_buffer == "ACKNOWLEDGE ") {
         m_currentDataType = Acknowledge;
+    } else if(m_buffer == "PLAYERADDR ") {
+        m_currentDataType = PlayerAddr;
     } else {
         m_currentDataType = Undefined;
         abort();
@@ -214,7 +184,7 @@ bool Connection::hasEnoughData()
     return true;
 }
 
-void Connection::processDataPrimaryServer()
+void Connection::processData()
 {
     m_buffer = read(m_numBytesForCurrentDataType);
     if(m_buffer.size() != m_numBytesForCurrentDataType) {
@@ -224,68 +194,36 @@ void Connection::processDataPrimaryServer()
 
     switch(m_currentDataType) {
     case Greeting:
-        emit newClient(this);
+        if(m_identity == PrimaryServer) {
+            emit newClient(this);
+        } else if(m_identity == Client) {
+            emit newGreeting(m_buffer);
+        }
         break;
     case Direction:
-        emit newMove(m_buffer);
+        if(m_identity == PrimaryServer || m_identity == BackupServer) {
+            emit newMove(m_buffer);
+        }
+        break;
+    case GameState:
+        if(m_identity == BackupServer || m_identity == Client) {
+            emit newState(m_buffer);
+        }
+        break;
+    case SelectServer:
+        if(m_identity == Client) {
+            emit newBackupServer(m_buffer);
+        }
         break;
     case Acknowledge:
-        emit newAck();
+        if(m_identity == PrimaryServer) {
+            emit newAck();
+        }
         break;
-    default:
-        break;
-    }
-
-    m_currentDataType = Undefined;
-    m_numBytesForCurrentDataType = 0;
-    m_buffer.clear();
-}
-
-void Connection::processDataBackupServer()
-{
-    m_buffer = read(m_numBytesForCurrentDataType);
-    if(m_buffer.size() != m_numBytesForCurrentDataType) {
-        abort();
-        return;
-    }
-
-    switch(m_currentDataType) {
-    case GameState:
-        emit newState(this, m_buffer);
-        break;
-    case Direction:
-        // check where is it from
-        emit newMove(this, m_buffer);
-        break;
-    default:
-        break;
-    }
-
-    m_currentDataType = Undefined;
-    m_numBytesForCurrentDataType = 0;
-    m_buffer.clear();
-}
-
-void Connection::processDataClient()
-{
-    m_buffer = read(m_numBytesForCurrentDataType);
-    if(m_buffer.size() != m_numBytesForCurrentDataType) {
-        abort();
-        return;
-    }
-
-    switch(m_currentDataType) {
-    case BServer:
-        emit newBackupServer(m_buffer);
-        break;
-    case Greeting:
-        emit newGreeting(m_buffer);
-        break;
-    case PlainText:
-        // Display
-        break;
-    case GameState:
-        emit newState(m_buffer);
+    case PlayerAddr:
+        if(m_identity == BackupServer) {
+            emit newPlayerAddr(m_buffer);
+        }
         break;
     default:
         break;

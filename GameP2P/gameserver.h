@@ -1,3 +1,12 @@
+/**************************************************************************/
+/* Class GameServer                                                       */
+/* This is the server-side of the Maze Game implemented with 2 kind, prim */
+/* -ary server and backup server. As a primary server response to GameClient */
+/* through Connection and maintain a backup server with latest GameState   */
+/* info. As a backup server, keep the local GameState with the latest, and */
+/* upgrad to primary server when previous primary server crashes.          */
+/**************************************************************************/
+
 #ifndef GAMESERVER_H
 #define GAMESERVER_H
 
@@ -9,10 +18,10 @@
 #include <QList>
 #include <QMap>
 
+#include "connection.h"
+
 class GameState;
-class Connection;
-class GameServerThread;
-class PeerManager;
+
 
 class GameServer : public QTcpServer
 {
@@ -25,44 +34,53 @@ public:
     ~GameServer();
 
     bool respondToMove(QString pid, QString move);
-    void getCurrentGameState(QByteArray &barray);
-    void setBackupServerTimeFlag(bool b) { m_backupServerTimerFlag = b; }
-    QTimer* getBackupServerTimer() { return m_backupServerTimer; }
 
 signals:
+    // signal to Connection
+    void haveMessageToSend(Connection::DataType, QByteArray message);
+    void updateConnection();
+    // signal for error
     void socketError(QTcpSocket::SocketError);
-    void gameStart();
 
 protected:
     void incomingConnection(qintptr socketDescriptor) Q_DECL_OVERRIDE;
 
 private slots:
-    void handleWaitingTimeout();
-    void initBackupServer();
     void handleNewClient(Connection* conn);
-    void handleNewState(Connection*, QByteArray state);
-    void handleNewMove(Connection*, QByteArray move);
+    void handleNewState(QByteArray buffer);
+    void handleNewMove(QByteArray buffer);
+    void handleNewPlayerAddr(QByteArray buffer);
     void handleNewAck();
+
+    void handleStartGameTimeout();
+    void handleBackupServerTimeout();
 
 private:
     void getRandString(QString &str);
-    QString addClient();
+    bool addClient(QString &playerId);
 
-    QMap<Connection*, QString> m_playerConnectionMap;
-    QMap<QString, GameServerThread*> m_playerThreadMap;
-    Status m_serverStatus;
-    QTimer *m_timer;
+    // for server itself
+    ServerType m_serverType;
+    QMap<QString, Connection*> m_playerConnectionMap;
+    // a map of player id with connection address
+    QMap<QString,QPair<QString, int> > m_playerAddrMap;
+
+    // for game
+    QTimer* m_gameStartTimer;
     QMutex m_serverStatusMutex;
-    QMutex m_gameStateMutex;
+    Status m_serverStatus;
     QList<QString> m_playerList;
+    QMutex m_gameStateMutex;
     GameState* m_gameState;
 
-    ServerType m_servertType;
+
+    // for it's backup server
+    bool m_hasBackupServer;
     QString m_backupServerIp;
     int m_backupServerPort;
     QTimer* m_backupServerTimer;
-    bool m_backupServerTimerFlag;
     Connection* m_connToBackup;
+    Connection* m_connToPrimary;
 };
 
 #endif // GAMESERVER_H

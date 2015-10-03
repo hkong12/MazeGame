@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
     qsrand(QTime::currentTime().msec());
-
+    qRegisterMetaType<Connection::DataType>("Connection::DataType");
 
     QString ipAddress;
     QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();

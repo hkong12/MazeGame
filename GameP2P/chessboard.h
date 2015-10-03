@@ -1,3 +1,9 @@
+/**************************************************************************/
+/* Class ChessBoard                                                       */
+/* This is a sub class of QWidget. Update the Class GameState by QPainter */
+/* to user interface, and catch user key input pass to Class GameClient.  */
+/**************************************************************************/
+
 #ifndef CHESSBOARD_H
 #define CHESSBOARD_H
 

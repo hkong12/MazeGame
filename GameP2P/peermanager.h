@@ -1,16 +1,16 @@
+/**************************************************************************/
+/* Class PeerManager                                                      */
+/* This is a class used by every class GameClient to manage the info of   */
+/* primary server and backup server.                                      */
+/**************************************************************************/
+
 #ifndef PEERMANAGER_H
 #define PEERMANAGER_H
 
-#include <QObject>
 #include <QHostAddress>
-#include <QMutex>
 
-class GameServer;
-
-class PeerManager : public QObject
+class PeerManager
 {
-    Q_OBJECT
-
 public:
     PeerManager() {}
 

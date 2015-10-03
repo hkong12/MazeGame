@@ -1,3 +1,10 @@
+/**************************************************************************/
+/* Class GameUI                                                           */
+/* This is the main widget of the application, which display and update   */
+/* the chessboard, client info, primary server info, backup server info   */
+/* and log.                                                               */
+/**************************************************************************/
+
 #ifndef GAMEUI_H
 #define GAMEUI_H
 
