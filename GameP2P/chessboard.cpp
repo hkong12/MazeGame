@@ -57,7 +57,11 @@ void ChessBoard::paintEvent(QPaintEvent *)
         PlayerID pid = pm.first;
         Location l = pm.second;
         QColor color(pid.mid(0, 2).toInt(&res, 16), pid.mid(2, 2).toInt(&res, 16), pid.mid(4, 2).toInt(&res, 16));
-        m_paint->setPen(QPen(Qt::white, 2, Qt::SolidLine));
+        if(pm.first == m_playerID) {
+            m_paint->setPen(QPen(Qt::red, 2, Qt::SolidLine));
+        } else {
+            m_paint->setPen(QPen(Qt::white, 2, Qt::SolidLine));
+        }
         m_paint->setBrush(QBrush(color, Qt::SolidPattern));
         m_paint->drawEllipse(BorderSize+(l.first+0.1)*blockSize, BorderSize+(l.second+0.1)*blockSize, blockSize*0.8, blockSize*0.8);
     }

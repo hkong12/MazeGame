@@ -38,7 +38,7 @@ public:
 signals:
     // signal to Connection
     void haveMessageToSend(Connection::DataType, QByteArray message);
-    void updateConnection();
+    void upgradeConnection();
     // signal for error
     void socketError(QTcpSocket::SocketError);
 
@@ -81,6 +81,7 @@ private:
     QTimer* m_backupServerTimer;
     Connection* m_connToBackup;
     Connection* m_connToPrimary;
+    QByteArray m_lastMoveRequest;
 };
 
 #endif // GAMESERVER_H

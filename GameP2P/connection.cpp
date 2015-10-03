@@ -60,7 +60,8 @@ void Connection::sendMessage(DataType dataType, QByteArray message)
     }
 
     QByteArray data = header.toUtf8() + QByteArray::number(message.size()) + ' ' + message;
-    write(data);
+    if(write(data) != data.size())
+        abort();
     return;
 }
 
@@ -194,7 +195,7 @@ void Connection::processData()
 
     switch(m_currentDataType) {
     case Greeting:
-        if(m_identity == PrimaryServer) {
+        if(m_identity == PrimaryServer || m_identity == BackupServer) {
             emit newClient(this);
         } else if(m_identity == Client) {
             emit newGreeting(m_buffer);

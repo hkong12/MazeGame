@@ -30,6 +30,7 @@ public:
     void connectToServer(QString host, int port);
     Status getClientStatus() { return m_status; }
     GameState *getGameState() { return m_gameState; }
+    bool getIsServer() { return m_isServer; }
 
 signals:
     // signals to Connection
@@ -53,14 +54,16 @@ public slots:
     void handleTryMove(QString move);
 
 private slots:
-    // slot to handle move timer out
+    // slot to handl timer out
     void handleMoveTimerout();
+    void handleWaitGreetingTimerout();
 
 private:
     Status m_status;
     QString m_myPlayerID;
     GameState *m_gameState;
     Connection *m_connection;
+    int m_connBindPort;
     PeerManager* m_peerManager;
 
     // marked when the client process has selected to maintain a server
@@ -68,6 +71,7 @@ private:
 
     // timer and cache for player movement
     QTimer m_moveTimer;
+    QTimer m_waitGreetingTimer;
     QString m_lastMove;
 };
 

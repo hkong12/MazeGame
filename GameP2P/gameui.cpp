@@ -57,10 +57,10 @@ GameUI::GameUI(QWidget *parent) : QWidget(parent)
     m_clientStatus = new QLabel(tr("Client Status:\nPlayer ID:\nTreasure Amount:\nStatus:\n"));
     m_clientStatus->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     m_clientStatus->setWordWrap(true);
-    m_primaryServerStatus = new QLabel(tr("Primary Server Status:\nHostname:\nPort:\nStatus:\n"));
+    m_primaryServerStatus = new QLabel(tr("Primary Server Status:\nHostname:\nPort:\n"));
     m_primaryServerStatus->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     m_primaryServerStatus->setWordWrap(true);
-    m_backupServerStatus = new QLabel(tr("Backup Server Status:\nHostname:\nPort:\nStatus:\n"));
+    m_backupServerStatus = new QLabel(tr("Backup Server Status:\nHostname:\nPort:\n"));
     m_backupServerStatus->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     m_backupServerStatus->setWordWrap(true);
 
@@ -101,6 +101,9 @@ void GameUI::setClient(GameClient *client)
     connect(m_client, SIGNAL(initGameState(GameState*)), this, SLOT(handleInitGameState(GameState*)));
     connect(m_client, SIGNAL(gameOver()), this, SLOT(handleGameOver()));
     connect(m_chessBoard, SIGNAL(tryMove(QString)), m_client, SLOT(handleTryMove(QString)));
+
+    if(client->getIsServer())
+         m_logTextEdit->insertPlainText('\n' + QString("<Primary Server> You have been selected as primary server."));
 }
 
 void GameUI::requestStart()
@@ -134,12 +137,16 @@ void GameUI::handleNewClientInfo(QString info)
 
 void GameUI::handleNewPrimaryServerInfo(QString info)
 {
-
+    QString t = QString(tr("Primary Server Status:\nHostname: %1\nPort: %2\n"))
+            .arg(info.section(',',0,0), info.section(',',1,1));
+    m_primaryServerStatus->setText(t);
 }
 
 void GameUI::handleNewBackupServerInfo(QString info)
 {
-
+    QString t = QString(tr("Backup Server Status:\nHostname: %1\nPort: %2\n"))
+            .arg(info.section(',',0,0), info.section(',',1,1));
+    m_backupServerStatus->setText(t);
 }
 
 void GameUI::handleInitGameState(GameState *gs)
