@@ -9,7 +9,7 @@
 #include "peermanager.h"
 
 
-static const int WaitingTimeout = 20 * 1000;
+static const int WaitingTimeout = 40 * 1000;
 static const int BackupServerTimeout = 500;
 static const int ConnToBackupPort = 33333;
 
@@ -296,19 +296,19 @@ void GameServer::handleBackupServerTimeout()
         selectedPlayerId = pid;
     } else {
         // select from player list
-        QMap<QString, Connection*>::iterator iter;
-        for(iter = m_playerConnectionMap.begin(); iter != m_playerConnectionMap.end(); iter ++) {
-            if(iter.value()->isWritable() && iter.key() != pid) {
-                selectedPlayerId = iter.key();
-                break;
-            }
-        }
+//        QMap<QString, Connection*>::iterator iter;
+//        for(iter = m_playerConnectionMap.begin(); iter != m_playerConnectionMap.end(); iter ++) {
+//            if(iter.value()->isWritable() && iter.key() != pid) {
+//                selectedPlayerId = iter.key();
+//                break;
+//            }
+//        }
     }
 
     if(selectedPlayerId.length() > 0) {
-        QString backupServerAddr = m_playerConnectionMap[selectedPlayerId]->peerAddress().toString();
+        QString backupServerIp = m_playerConnectionMap[selectedPlayerId]->peerAddress().toString();
         int backupServerPort = this->serverPort() + 1000;
-        QString message = '<' + backupServerAddr + ',' + QString::number(backupServerPort) + '>'
+        QString message = '<' + backupServerIp + ',' + QString::number(backupServerPort) + '>'
             +" You are selected as the backup server.";
         disconnect(this, SIGNAL(haveMessageToSend(Connection::DataType,QByteArray)), 0, 0);
         connect(this, SIGNAL(haveMessageToSend(Connection::DataType,QByteArray)), m_playerConnectionMap[selectedPlayerId], SLOT(sendMessage(Connection::DataType,QByteArray)));
@@ -328,10 +328,10 @@ void GameServer::handleBackupServerTimeout()
         if(m_connToBackup) {
             m_connToBackup->close();
         } else {
-            m_connToBackup = new Connection();
+            m_connToBackup = new Connection(Connection::PrimaryServer);
         }
         m_connToBackup->bind(QHostAddress(ipAddress), ConnToBackupPort);
-        m_connToBackup->connectToHost(QHostAddress(m_backupServerIp), m_backupServerPort);
+        m_connToBackup->connectToHost(QHostAddress(backupServerIp), backupServerPort);
         connect(m_connToBackup, SIGNAL(newAck()), this, SLOT(handleNewAck()));
         // bytes of serialized player address map
         QByteArray addrmap;
@@ -350,9 +350,9 @@ void GameServer::handleBackupServerTimeout()
         emit haveMessageToSend(Connection::GameState, state);
         emit haveMessageToSend(Connection::Direction, m_lastMoveRequest);
 
-    // update backup server info
+        // update backup server info
         m_hasBackupServer = true;
-        m_backupServerIp = backupServerAddr;
+        m_backupServerIp = backupServerIp;
         m_backupServerPort = backupServerPort;
 
     } else {

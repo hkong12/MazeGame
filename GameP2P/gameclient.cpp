@@ -194,5 +194,5 @@ void GameClient::handleWaitGreetingTimerout()
     emit haveMessageToSend(Connection::Direction, QString(s+','+m_myPlayerID+','+m_lastMove).toUtf8());
     emit newPrimaryServerInfo(psip+','+QString::number(psport));
     emit newBackupServerInfo(" , ");
-    emit newLog("<Primary Server> You have been selected as primary server.");
+    emit newLog('<' + psip + ',' + QString::number(psport)  + "> has been selected as primary server.");
 }
