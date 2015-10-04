@@ -131,7 +131,7 @@ void GameServer::handleNewClient(Connection *conn)
             disconnect(this, SIGNAL(haveMessageToSend(Connection::DataType,QByteArray)), 0, 0);
             connect(this, SIGNAL(haveMessageToSend(Connection::DataType,QByteArray)), conn, SLOT(sendMessage(Connection::DataType,QByteArray)));
             message = '<' + backupServerAddr + ',' + QString::number(backupServerPort) + '>'
-                    +" you are selected as the backup server.";
+                    +" is selected as the backup server.";
             emit haveMessageToSend(Connection::SelectServer, message.toUtf8());
             // assume no crash in first 20s
             m_hasBackupServer = true;
@@ -311,7 +311,7 @@ void GameServer::handleBackupServerTimeout()
         QString backupServerIp = m_playerConnectionMap[selectedPlayerId]->peerAddress().toString();
         int backupServerPort = this->serverPort() + 1000;
         QString message = '<' + backupServerIp + ',' + QString::number(backupServerPort) + '>'
-            +" you are selected as the backup server.";
+            +" is selected as the backup server.";
         disconnect(this, SIGNAL(haveMessageToSend(Connection::DataType,QByteArray)), 0, 0);
         connect(this, SIGNAL(haveMessageToSend(Connection::DataType,QByteArray)), m_playerConnectionMap[selectedPlayerId], SLOT(sendMessage(Connection::DataType,QByteArray)));
         emit haveMessageToSend(Connection::SelectServer, message.toUtf8());
@@ -381,7 +381,8 @@ void GameServer::handleBackupServerTimeout()
         // add backup server address
         QByteArray tmp;
         tmp.setNum(m_backupServerPort);
-        bytes = '{' + m_backupServerIp.toUtf8() + ',' + tmp + '}' + bytes;
+        if(m_hasBackupServer)
+            bytes = '{' + m_backupServerIp.toUtf8() + ',' + tmp + '}' + bytes;
         disconnect(this, SIGNAL(haveMessageToSend(Connection::DataType,QByteArray)), 0, 0);
         connect(this, SIGNAL(haveMessageToSend(Connection::DataType,QByteArray)), m_playerConnectionMap[pid], SLOT(sendMessage(Connection::DataType,QByteArray)));
         emit haveMessageToSend(Connection::GameState, bytes);
