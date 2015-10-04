@@ -6,8 +6,8 @@
 #include "peermanager.h"
 #include "gameserver.h"
 
-static const int MoveTimerOut = 500;
-static const int WaitGreetingTimeOut = 200;
+static const int MoveTimerOut = 800;
+static const int WaitGreetingTimeOut = 300;
 static const int StartBindPort = 50000;
 
 GameClient::GameClient(QString psIp, int psPort)
@@ -148,7 +148,7 @@ void GameClient::handleNewBackupServer(QByteArray buffer)
         backupServer->moveToThread(sthread);
         sthread->start();
         m_isServer = false;
-        emit haveMessageToSend(Connection::Acknowledge, QString('<' + bs + '>' + " has been selected as the backup server.").toUtf8());
+        //emit haveMessageToSend(Connection::Acknowledge, QString('<' + bs + '>' + " has been selected as the backup server.").toUtf8());
         emit newLog(QString(buffer));
     }
 }

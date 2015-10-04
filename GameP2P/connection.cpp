@@ -20,13 +20,11 @@ Connection::Connection(Identity identity, QObject *parent )
 
 void Connection::sendGreetingMessage()
 {
-    if(m_identity == Client) {
         QString greetingMessage = "We are connected";
         QByteArray greeting = greetingMessage.toUtf8();
         QByteArray data = "GREETING " + QByteArray::number(greeting.size()) + ' ' + greeting;
         if(write(data) != data.size())
             abort();
-    }
 }
 
 void Connection::sendMessage(DataType dataType, QByteArray message)
