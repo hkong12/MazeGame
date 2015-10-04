@@ -147,7 +147,7 @@ void GameClient::handleNewBackupServer(QByteArray buffer)
         QThread* sthread = new QThread;
         backupServer->moveToThread(sthread);
         sthread->start();
-        m_isServer = false;
+        m_isServer = true;
         //emit haveMessageToSend(Connection::Acknowledge, QString('<' + bs + '>' + " has been selected as the backup server.").toUtf8());
         emit newLog(QString(buffer));
     }

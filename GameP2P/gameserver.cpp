@@ -153,7 +153,7 @@ bool GameServer::addClient(QString &playerId)
         getRandString(playerId);
         m_playerList.append(playerId);
         m_serverStatus = WAIT;
-        m_gameStartTimer = new QTimer();
+        m_gameStartTimer = new QTimer;
         m_gameStartTimer->setSingleShot(true);
         connect(m_gameStartTimer, SIGNAL(timeout()), this, SLOT(handleStartGameTimeout()));
         m_gameStartTimer->start(WaitingTimeout);
@@ -239,7 +239,7 @@ void GameServer::handleStartGameTimeout()
     }
     emit haveMessageToSend(Connection::GameState, state);
 
-    m_backupServerTimer = new QTimer();
+    m_backupServerTimer = new QTimer;
     m_backupServerTimer->setSingleShot(true);
     connect(m_backupServerTimer, SIGNAL(timeout()), this, SLOT(handleBackupServerTimeout()));
 }
@@ -270,12 +270,21 @@ void GameServer::handleNewMove(QByteArray buffer)
             emit haveMessageToSend(Connection::Direction, buffer);
             m_lastMoveRequest = buffer;
             m_backupServerTimer->start(BackupServerTimeout);
+        } else {
+            m_lastMoveRequest = buffer;
+            handleBackupServerTimeout();
         }
     }
 }
 
 void GameServer::handleBackupServerTimeout()
 {
+    if(!m_backupServerTimer) {
+        m_backupServerTimer = new QTimer;
+        m_backupServerTimer->setSingleShot(true);
+        connect(m_backupServerTimer, SIGNAL(timeout()), this, SLOT(handleBackupServerTimeout()));
+    }
+
     bool requestClientIsServer = (m_lastMoveRequest.mid(0,1) == "Y")? true : false;
     QString pid = QString(m_lastMoveRequest.mid(2, 6));
     QString move = QString(m_lastMoveRequest.mid(9, 1));
@@ -316,7 +325,11 @@ void GameServer::handleBackupServerTimeout()
                 break;
             }
         }
-        m_connToBackup->close();
+        if(m_connToBackup) {
+            m_connToBackup->close();
+        } else {
+            m_connToBackup = new Connection();
+        }
         m_connToBackup->bind(QHostAddress(ipAddress), ConnToBackupPort);
         m_connToBackup->connectToHost(QHostAddress(m_backupServerIp), m_backupServerPort);
         connect(m_connToBackup, SIGNAL(newAck()), this, SLOT(handleNewAck()));
