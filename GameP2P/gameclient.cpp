@@ -174,8 +174,18 @@ void GameClient::handleMoveTimerout() {
         m_peerManager->setPrimaryServerAddr(psip, psport);
         m_peerManager->setHasBackupServer(false);
         // connect to new primary server and resend last move to new primary server
+        QString ipAddress;
+        QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
+        // use the first non-localhost IPv4 address
+        for(int i = 0; i < ipAddressesList.size(); ++i) {
+            if(ipAddressesList.at(i) != QHostAddress::LocalHost &&
+               ipAddressesList.at(i).toIPv4Address()) {
+                ipAddress = ipAddressesList.at(i).toString();
+                break;
+            }
+        }
         m_connection->close();
-        m_connection->bind(m_connBindPort);
+        m_connection->bind(QHostAddress(ipAddress), m_connBindPort);
         m_connection->connectToHost(QHostAddress(psip), psport);
 
         // wait until tcp socket is writabel

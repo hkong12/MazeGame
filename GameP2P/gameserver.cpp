@@ -128,8 +128,10 @@ void GameServer::handleNewClient(Connection *conn)
             // select new client as backup server
             QString backupServerAddr = conn->peerAddress().toString();
             int backupServerPort = this->serverPort() + 1000;
+            disconnect(this, SIGNAL(haveMessageToSend(Connection::DataType,QByteArray)), 0, 0);
+            connect(this, SIGNAL(haveMessageToSend(Connection::DataType,QByteArray)), conn, SLOT(sendMessage(Connection::DataType,QByteArray)));
             message = '<' + backupServerAddr + ',' + QString::number(backupServerPort) + '>'
-                    +" You are selected as the backup server.";
+                    +" you are selected as the backup server.";
             emit haveMessageToSend(Connection::SelectServer, message.toUtf8());
             // assume no crash in first 20s
             m_hasBackupServer = true;
@@ -309,7 +311,7 @@ void GameServer::handleBackupServerTimeout()
         QString backupServerIp = m_playerConnectionMap[selectedPlayerId]->peerAddress().toString();
         int backupServerPort = this->serverPort() + 1000;
         QString message = '<' + backupServerIp + ',' + QString::number(backupServerPort) + '>'
-            +" You are selected as the backup server.";
+            +" you are selected as the backup server.";
         disconnect(this, SIGNAL(haveMessageToSend(Connection::DataType,QByteArray)), 0, 0);
         connect(this, SIGNAL(haveMessageToSend(Connection::DataType,QByteArray)), m_playerConnectionMap[selectedPlayerId], SLOT(sendMessage(Connection::DataType,QByteArray)));
         emit haveMessageToSend(Connection::SelectServer, message.toUtf8());
