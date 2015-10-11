@@ -62,10 +62,10 @@ void GameServer::incomingConnection(qintptr socketDescriptor)
 //    if(m_serverType == BackupServer && m_connToPrimary == NULL) {
 //        m_connToPrimary = newcon;
 
-//bug        QThread* sthread = new QThread;
-//bug        newcon->moveToThread(sthread);
-//bug        sthread->start();
-//bug        connect(newcon, SIGNAL(destroyed()), sthread, SLOT(deleteLater()));
+//        QThread* sthread = new QThread;
+//        newcon->moveToThread(sthread);
+//        sthread->start();
+//        connect(newcon, SIGNAL(destroyed()), sthread, SLOT(deleteLater()));
 }
 
 void GameServer::handleNewClient(Connection *conn)
@@ -91,10 +91,10 @@ void GameServer::handleNewClient(Connection *conn)
     for(iter = m_playerAddrMap.begin(); iter != m_playerAddrMap.end(); iter ++) {
         if(iter.value().first == peerIp && iter.value().second == peerPort) {
             m_playerConnectionMap[iter.key()] = conn;
-//bug            QThread* cthread = new QThread;
-//bug            conn->moveToThread(cthread);
-//bug            cthread->start();
-//bug            connect(conn, SIGNAL(destroyed()), cthread, SLOT(deleteLater()));
+//            QThread* cthread = new QThread;
+//            conn->moveToThread(cthread);
+//            cthread->start();
+//            connect(conn, SIGNAL(destroyed()), cthread, SLOT(deleteLater()));
             return;
         }
     }
@@ -118,10 +118,10 @@ void GameServer::handleNewClient(Connection *conn)
         message = '<'+ playerId + '>' + " You have joined the new game. Please wait for other players...";
         emit haveMessageToSend(Connection::Greeting, message.toUtf8());
         // run connection in new thread
-//bug        QThread* cthread = new QThread;
-//bug        conn->moveToThread(cthread);
-//bug        cthread->start();
-//bug        connect(conn, SIGNAL(destroyed()), cthread, SLOT(deleteLater()));
+//        QThread* cthread = new QThread;
+//        conn->moveToThread(cthread);
+//        cthread->start();
+//        connect(conn, SIGNAL(destroyed()), cthread, SLOT(deleteLater()));
 
         // if primary server does not have a backup server
         if(!m_hasBackupServer) {
@@ -296,15 +296,6 @@ void GameServer::handleBackupServerTimeout()
     if(!requestClientIsServer) {
         // select request client as backup server
         selectedPlayerId = pid;
-    } else {
-        // select from player list
-//        QMap<QString, Connection*>::iterator iter;
-//        for(iter = m_playerConnectionMap.begin(); iter != m_playerConnectionMap.end(); iter ++) {
-//            if(iter.value()->isWritable() && iter.key() != pid) {
-//                selectedPlayerId = iter.key();
-//                break;
-//            }
-//        }
     }
 
     if(selectedPlayerId.length() > 0) {
